@@ -30,7 +30,7 @@ select cron.schedule(
   $$
   select net.http_get(
     url := 'https://YOUR-APP-DOMAIN/api/checkin/cron',
-    headers := jsonb_build_object('Authorization', 'Bearer YOUR_CRON_SECRET'),
+    headers := jsonb_build_object('Authorization', 'Bearer 99817cca9ca8292e47d1851343b0a82aacd4f78432f0066116e30d9c0be8dc70'),
     timeout_milliseconds := 30000
   );
   $$

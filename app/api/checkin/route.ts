@@ -11,7 +11,7 @@ export const maxDuration = 30;
  * person should currently see (new or still open), or null.
  */
 export async function POST() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -16,7 +16,7 @@ const VALID: ActAction[] = ["recommended", "shrink", "move", "remove", "done", "
  * buttons on the system notification, so both do exactly the same thing.
  */
 export async function POST(request: Request) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
