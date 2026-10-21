@@ -1,0 +1,93 @@
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --color-cream: 255 249 240;
+    --color-forest: 25 59 50;
+    --color-forest-light: 36 84 74;
+    --color-green: 101 184 145;
+    --color-peach: 244 177 131;
+    --color-charcoal: 48 48 46;
+    --color-surface: 255 255 255;
+    --color-border: 48 48 46;
+  }
+
+  :root.dark {
+    color-scheme: dark;
+    --color-cream: 21 32 28;
+    --color-forest: 225 239 230;
+    --color-forest-light: 192 220 203;
+    --color-green: 111 194 151;
+    --color-peach: 244 177 131;
+    --color-charcoal: 231 235 229;
+    --color-surface: 28 43 37;
+    --color-border: 190 210 197;
+  }
+
+  body {
+    background-color: rgb(var(--color-cream));
+    color: rgb(var(--color-charcoal));
+  }
+
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  ::selection {
+    background-color: #65b89133;
+    color: #193b32;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-serif);
+    letter-spacing: -0.01em;
+  }
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+@layer components {
+  .content-wrap {
+    @apply mx-auto w-full max-w-content px-5 sm:px-8;
+  }
+
+  .btn-primary {
+    @apply btn bg-forest text-cream hover:bg-forest-light;
+  }
+
+  .btn-secondary {
+    @apply btn bg-transparent text-forest border border-forest/25 hover:bg-forest/5;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-charcoal hover:bg-charcoal/5;
+  }
+
+  .card {
+    @apply rounded-card border border-charcoal/10 bg-surface shadow-subtle;
+  }
+
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.14em] text-forest/70;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.dark .card {
+  border-color: rgb(var(--color-border) / 0.16);
+}
