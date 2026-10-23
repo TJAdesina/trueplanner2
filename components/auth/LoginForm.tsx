@@ -71,7 +71,7 @@ export function LoginForm() {
         {error && <p className="text-sm text-[#B3492B]">{error}</p>}
 
         <Button type="submit" disabled={loading} className="w-full">
-          {loading ? "Signing in\u2026" : "Sign in"}
+          {loading ? "Signing in…" : "Sign in"}
         </Button>
       </form>
     </AuthShell>

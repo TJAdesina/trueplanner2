@@ -215,7 +215,7 @@ export function EndOfDay({
               Leave them
             </Button>
             <Button onClick={moveToTomorrow} disabled={moving}>
-              {moving ? "Moving\u2026" : `Move ${unfinished.length === 1 ? "it" : `${unfinished.length}`} to tomorrow`}
+              {moving ? "Moving…" : `Move ${unfinished.length === 1 ? "it" : `${unfinished.length}`} to tomorrow`}
             </Button>
           </div>
         </>

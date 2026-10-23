@@ -55,7 +55,7 @@ function Row({ title, time, state }: { title: string; time: string; state: "done
         </span>
         <span className={`mt-0.5 block text-[11px] ${done ? "text-charcoal/35" : "text-[#B3702F]"}`}>
           {time}
-          {!done && " \u00b7 ran over"}
+          {!done && " · ran over"}
         </span>
       </span>
     </li>

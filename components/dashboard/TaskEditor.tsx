@@ -238,7 +238,7 @@ export function TaskEditor({ task, tags, onClose, onCreateTag, onSave, onDelete 
               Cancel
             </Button>
             <Button type="submit" disabled={saving || !title.trim()}>
-              {saving ? "Saving\u2026" : "Save"}
+              {saving ? "Saving…" : "Save"}
             </Button>
           </div>
         </div>

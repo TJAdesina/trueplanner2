@@ -91,7 +91,7 @@ export function SuggestionCard({
           disabled={busy}
           className="btn-primary flex-1 sm:flex-none"
         >
-          {busy ? "Working\u2026" : PRIMARY_LABEL[recommended]}
+          {busy ? "Working…" : PRIMARY_LABEL[recommended]}
         </button>
 
         <Popover

@@ -19,7 +19,7 @@ const sans = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "TruePlanner \u2014 Keep the day moving.",
+  title: "TruePlanner — Keep the day moving.",
   description:
     "A simple to-do list that notices when a task slips and suggests a useful next step: shrink it, move it, or let it go.",
   icons: {

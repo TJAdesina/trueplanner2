@@ -97,7 +97,7 @@ export function sendReminderPush(supabase: SupabaseClient, task: Task, timeZone:
   return deliver(supabase, task.user_id, {
     type: "reminder",
     title: `Starting now: ${task.title}`.slice(0, 90),
-    body: [when, length ? formatDuration(length) : ""].filter(Boolean).join(" \u00b7 "),
+    body: [when, length ? formatDuration(length) : ""].filter(Boolean).join(" · "),
     tag: `reminder-${task.id}`,
     url: "/dashboard",
   });

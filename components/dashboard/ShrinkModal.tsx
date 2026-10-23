@@ -64,7 +64,7 @@ export function ShrinkModal({
         )}
         <div className="flex justify-end">
           <Button type="submit" disabled={saving || !title.trim()}>
-            {saving ? "Saving\u2026" : "Shrink task"}
+            {saving ? "Saving…" : "Shrink task"}
           </Button>
         </div>
       </form>

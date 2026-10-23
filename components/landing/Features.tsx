@@ -11,7 +11,7 @@ const FEATURES = [
   {
     icon: Eye,
     title: "Daily clarity",
-    body: "Today\u2019s list, front and centre. Add a task in one line. Times, tags and details are there only if you want them.",
+    body: "Today’s list, front and centre. Add a task in one line. Times, tags and details are there only if you want them.",
   },
   {
     icon: MessageSquareText,

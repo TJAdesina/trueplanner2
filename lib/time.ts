@@ -17,7 +17,7 @@ export function formatTimeRange(startIso: string, endIso: string): string {
   const a = formatTime(startIso);
   const b = formatTime(endIso);
   const samePeriod = a.slice(-2) === b.slice(-2);
-  return samePeriod ? `${a.slice(0, -3)}\u2013${b}` : `${a}\u2013${b}`;
+  return samePeriod ? `${a.slice(0, -3)}–${b}` : `${a}–${b}`;
 }
 
 export function minutesBetween(a: Date, b: Date): number {

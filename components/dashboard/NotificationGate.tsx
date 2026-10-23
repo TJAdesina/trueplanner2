@@ -100,7 +100,7 @@ export function NotificationGate() {
         </Button>
         {!blocked && (
           <Button onClick={turnOn} disabled={working}>
-            {working ? "Waiting\u2026" : "Turn on"}
+            {working ? "Waiting…" : "Turn on"}
           </Button>
         )}
       </div>

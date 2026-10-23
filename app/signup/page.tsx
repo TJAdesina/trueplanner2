@@ -73,7 +73,7 @@ export default function SignupPage() {
   return (
     <AuthShell
       title="Create your account"
-      subtitle="Start with today\u2019s tasks. No perfect schedule required."
+      subtitle="Start with today’s tasks. No perfect schedule required."
       footer={
         <>
           Already have an account?{" "}
@@ -116,7 +116,7 @@ export default function SignupPage() {
         {error && <p className="text-sm text-[#B3492B]">{error}</p>}
 
         <Button type="submit" disabled={loading} className="w-full">
-          {loading ? "Creating account\u2026" : "Create account"}
+          {loading ? "Creating account…" : "Create account"}
         </Button>
       </form>
     </AuthShell>
