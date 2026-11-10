@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { evaluateCheckin, sendStartReminders } from "@/lib/checkinService";
+import { evaluateCheckin, sendDeadlineWarnings, sendStartReminders } from "@/lib/checkinService";
 import type { Profile } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +24,7 @@ export async function POST() {
 
   const now = new Date();
   await sendStartReminders(supabase, profile as Profile, now);
+  const deadlines = await sendDeadlineWarnings(supabase, profile as Profile, now);
   const result = await evaluateCheckin(supabase, profile as Profile, now);
-  return NextResponse.json({ checkin: result.checkin });
+  return NextResponse.json({ checkin: result.checkin, deadlines });
 }

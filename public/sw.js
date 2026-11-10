@@ -1,4 +1,4 @@
-/* TruePlanner service worker: push notifications and installability. */
+﻿/* TruePlanner service worker: push notifications and installability. */
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
@@ -40,9 +40,18 @@ self.addEventListener("push", (event) => {
     (async () => {
       const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
 
-      // If you're looking at the app right now, the in-app card is enough.
       if (payload.type === "checkin" && windows.some((c) => c.focused)) {
         windows.forEach((c) => c.postMessage({ type: "checkin-refresh" }));
+        return;
+      }
+
+      if (payload.type === "deadline" && windows.some((c) => c.focused)) {
+        windows.forEach((c) =>
+          c.postMessage({
+            type: "deadline-warning",
+            warning: { taskId: payload.taskId, headline: payload.title, body: payload.body },
+          })
+        );
         return;
       }
 
@@ -51,13 +60,15 @@ self.addEventListener("push", (event) => {
         tag: payload.tag || "trueplanner",
         icon: ICON,
         badge: BADGE,
-        data: { url: payload.url || "/dashboard", type: payload.type, checkinId: payload.checkinId },
+        data: { url: payload.url || "/dashboard", type: payload.type, checkinId: payload.checkinId, taskId: payload.taskId },
       };
-      if (payload.type === "checkin" && Array.isArray(payload.actions)) {
+      if (Array.isArray(payload.actions)) {
         options.actions = payload.actions.slice(0, 2);
       }
       await self.registration.showNotification(payload.title || "TruePlanner", options);
-      windows.forEach((c) => c.postMessage({ type: "checkin-refresh" }));
+      if (payload.type === "checkin") {
+        windows.forEach((c) => c.postMessage({ type: "checkin-refresh" }));
+      }
     })()
   );
 });
@@ -77,7 +88,6 @@ async function answerFromNotification(data, action) {
     const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
     windows.forEach((c) => c.postMessage({ type: "tasks-refresh" }));
 
-    // A short confirmation that tidies itself up.
     await self.registration.showNotification("Done", {
       body: result.message || "Your plan is updated.",
       tag: "tp-result",
@@ -89,7 +99,35 @@ async function answerFromNotification(data, action) {
     const shown = await self.registration.getNotifications({ tag: "tp-result" });
     shown.forEach((n) => n.close());
   } catch {
-    // Couldn't apply it from here (signed out, offline): open the app so it can be done there.
+    await openApp(data.url);
+  }
+}
+
+async function answerDeadlineFromNotification(data, action) {
+  try {
+    const res = await fetch("/api/task-action", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ taskId: data.taskId, action }),
+    });
+    if (!res.ok) throw new Error(`Request failed (${res.status})`);
+    const result = await res.json();
+
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    windows.forEach((c) => c.postMessage({ type: "tasks-refresh" }));
+
+    await self.registration.showNotification("Done", {
+      body: result.message || "Your plan is updated.",
+      tag: "tp-result",
+      icon: ICON,
+      badge: BADGE,
+      silent: true,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 4000));
+    const shown = await self.registration.getNotifications({ tag: "tp-result" });
+    shown.forEach((n) => n.close());
+  } catch {
     await openApp(data.url);
   }
 }
@@ -102,5 +140,11 @@ self.addEventListener("notificationclick", (event) => {
     event.waitUntil(answerFromNotification(data, event.action));
     return;
   }
+
+  if (data.type === "deadline" && data.taskId && (event.action === "done" || event.action === "extend")) {
+    event.waitUntil(answerDeadlineFromNotification(data, event.action));
+    return;
+  }
+
   event.waitUntil(openApp(data.url));
 });

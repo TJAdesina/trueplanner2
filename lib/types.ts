@@ -48,6 +48,7 @@ export interface Task {
   move_count: number;
   original_scope: string | null;
   last_checkin_at: string | null;
+  deadline_warned_at: string | null;
   snoozed_until: string | null;
   completed_at: string | null;
   recurrence: Recurrence | null;
@@ -118,9 +119,16 @@ export interface Profile {
   theme: "light" | "dark" | "system";
   ai_processing_enabled: boolean;
   checkin_gap_minutes: number;
+  deadline_warning_minutes: number;
   eod_prompted_on: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface DeadlineWarning {
+  taskId: string;
+  headline: string;
+  body: string;
 }
 
 export interface CheckinContent {

@@ -1,12 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Checkin, Profile, Task } from "./types";
-import { dateKeyOf, minutesBetween, startOfDayInZone } from "./time";
+import type { Checkin, DeadlineWarning, Profile, Task } from "./types";
+import { dateKeyOf, formatInZone, minutesBetween, startOfDayInZone } from "./time";
 import { isOpen, isTimed, OPEN_STATUSES } from "./tasks";
 import { rowToTask, TASK_SELECT } from "./taskOps";
-import { DAILY_CHECKIN_CAP, findSlipped, gapMinutes, isQuietHours } from "./triggers";
+import { DAILY_CHECKIN_CAP, deadlineLeadMinutes, findDueDeadlines, findSlipped, gapMinutes, isQuietHours } from "./triggers";
 import { buildSuggestion } from "./suggestions";
 import { writeCheckin } from "./checkinWriter";
-import { sendCheckinPush, sendReminderPush } from "./push";
+import { sendCheckinPush, sendDeadlinePush, sendReminderPush } from "./push";
 
 /**
  * Decides whether this user should hear about a slipped task right now and,
@@ -176,4 +176,58 @@ export async function sendStartReminders(db: Db, profile: Profile, now: Date = n
     sent += 1;
   }
   return sent;
+}
+
+export async function sendDeadlineWarnings(db: Db, profile: Profile, now: Date = new Date()): Promise<DeadlineWarning[]> {
+  if (!profile.notifications_enabled) return [];
+
+  const leadMinutes = deadlineLeadMinutes(profile);
+  if (leadMinutes <= 0) return [];
+
+  const tz = profile.timezone || "UTC";
+  if (isQuietHours(now, profile, tz)) return [];
+
+  const { data: rows } = await db
+    .from("tasks")
+    .select(TASK_SELECT)
+    .eq("user_id", profile.id)
+    .eq("priority", "high")
+    .in("status", OPEN_STATUSES as unknown as string[])
+    .is("deadline_warned_at", null)
+    .gt("end_time", now.toISOString())
+    .lte("end_time", new Date(now.getTime() + leadMinutes * 60_000).toISOString());
+
+  const tasks = (rows ?? []).map((row) => rowToTask(row));
+  const due = findDueDeadlines(tasks, leadMinutes, now);
+  const warnings: DeadlineWarning[] = [];
+
+  for (const task of due) {
+    const { data: claimed } = await db
+      .from("tasks")
+      .update({ deadline_warned_at: now.toISOString() })
+      .eq("id", task.id)
+      .is("deadline_warned_at", null)
+      .select("id");
+    if (!claimed?.length) continue;
+
+    const end = new Date(task.end_time!);
+    const remaining = Math.max(0, Math.ceil((end.getTime() - now.getTime()) / 60_000));
+    const headline = `${remaining} minute${remaining === 1 ? "" : "s"} left`;
+    const openChecklist = task.checklist.filter((item) => !item.done).length;
+    const title = task.title.length > 60 ? `${task.title.slice(0, 57)}...` : task.title;
+    const bodyParts = [`“${title}” ends at ${formatInZone(end, tz)}.`];
+    if (openChecklist > 0) {
+      bodyParts.push(`${openChecklist} checklist item${openChecklist === 1 ? "" : "s"} still open.`);
+    }
+
+    const warning: DeadlineWarning = {
+      taskId: task.id,
+      headline,
+      body: bodyParts.join(" "),
+    };
+    await sendDeadlinePush(db, profile.id, warning);
+    warnings.push(warning);
+  }
+
+  return warnings;
 }

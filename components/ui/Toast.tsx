@@ -6,6 +6,8 @@ import { X } from "lucide-react";
 interface ToastOptions {
   actionLabel?: string;
   onAction?: () => void | Promise<void>;
+  secondaryLabel?: string;
+  onSecondary?: () => void | Promise<void>;
   tone?: "default" | "error";
   duration?: number;
 }
@@ -52,7 +54,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               item.tone === "error" ? "bg-[#B3492B] text-white" : "bg-forest text-cream"
             }`}
           >
-            <span className="flex-1 leading-snug">{item.message}</span>
+            <span className="flex-1 break-words leading-snug">{item.message}</span>
             {item.actionLabel && (
               <button
                 onClick={async () => {
@@ -62,6 +64,17 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 className="shrink-0 rounded-md px-2 py-1 text-sm font-semibold underline-offset-2 hover:underline"
               >
                 {item.actionLabel}
+              </button>
+            )}
+            {item.secondaryLabel && (
+              <button
+                onClick={async () => {
+                  dismiss(item.id);
+                  await item.onSecondary?.();
+                }}
+                className="shrink-0 rounded-md border border-white/25 bg-white/5 px-2 py-1 text-sm font-medium opacity-80 hover:opacity-100"
+              >
+                {item.secondaryLabel}
               </button>
             )}
             <button
