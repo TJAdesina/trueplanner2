@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { evaluateCheckin, sendStartReminders } from "@/lib/checkinService";
+﻿import { NextResponse } from "next/server";
+import { evaluateCheckin, sendDeadlineWarnings, sendStartReminders } from "@/lib/checkinService";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Profile } from "@/lib/types";
 
@@ -18,7 +18,7 @@ async function run(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let db;
+  let db: ReturnType<typeof createAdminClient>;
   try {
     db = createAdminClient();
   } catch (error) {
@@ -31,11 +31,13 @@ async function run(request: Request) {
   const now = new Date();
   let created = 0;
   let reminders = 0;
+  let warnings = 0;
   let failed = 0;
   for (const row of profiles ?? []) {
     const profile = row as Profile;
     try {
       reminders += await sendStartReminders(db, profile, now);
+      warnings += (await sendDeadlineWarnings(db, profile, now)).length;
       const result = await evaluateCheckin(db, profile, now);
       if (result.created) created += 1;
     } catch (err) {
@@ -44,7 +46,7 @@ async function run(request: Request) {
     }
   }
 
-  return NextResponse.json({ scanned: profiles?.length ?? 0, created, reminders, failed });
+  return NextResponse.json({ scanned: profiles?.length ?? 0, created, reminders, warnings, failed });
 }
 
 export const GET = run;

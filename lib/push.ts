@@ -1,16 +1,17 @@
 import webpush from "web-push";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Checkin, Task } from "@/lib/types";
+import type { Checkin, DeadlineWarning, Task } from "@/lib/types";
 import { formatDuration, formatInZone } from "@/lib/time";
 import { durationMinutes } from "@/lib/tasks";
 
 export interface PushPayload {
-  type: "checkin" | "reminder" | "test";
+  type: "checkin" | "reminder" | "deadline" | "test";
   title: string;
   body: string;
   tag: string;
   url: string;
   checkinId?: string;
+  taskId?: string;
   actions?: { action: string; title: string }[];
 }
 
@@ -58,7 +59,7 @@ async function deliver(supabase: SupabaseClient, userId: string, payload: PushPa
       try {
         // A check-in that can't be delivered within 30 minutes is no longer useful.
         await webpush.sendNotification(subscription, body, {
-          TTL: payload.type === "test" ? 60 : 30 * 60,
+          TTL: payload.type === "deadline" ? 300 : payload.type === "test" ? 60 : 30 * 60,
           urgency: "high",
         });
         sent += 1;
@@ -100,6 +101,21 @@ export function sendReminderPush(supabase: SupabaseClient, task: Task, timeZone:
     body: [when, length ? formatDuration(length) : ""].filter(Boolean).join(" · "),
     tag: `reminder-${task.id}`,
     url: "/dashboard",
+  });
+}
+
+export function sendDeadlinePush(supabase: SupabaseClient, userId: string, warning: DeadlineWarning) {
+  return deliver(supabase, userId, {
+    type: "deadline",
+    title: warning.headline,
+    body: warning.body,
+    tag: `deadline-${warning.taskId}`,
+    url: "/dashboard",
+    taskId: warning.taskId,
+    actions: [
+      { action: "done", title: "Mark done" },
+      { action: "extend", title: "Need 15 more" },
+    ],
   });
 }
 

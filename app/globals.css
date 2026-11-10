@@ -4,6 +4,8 @@
 @layer base {
   :root {
     color-scheme: light;
+    --font-serif: "Georgia", "Times New Roman", serif;
+    --font-sans: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
     --color-cream: 255 249 240;
     --color-forest: 25 59 50;
     --color-forest-light: 36 84 74;

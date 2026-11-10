@@ -21,7 +21,7 @@ import { useCheckins, type CheckinAnswer } from "@/hooks/useCheckins";
 import { useNow } from "@/hooks/useNow";
 import { dateKeyOf, formatDayLabel } from "@/lib/time";
 import type { TaskPatch } from "@/lib/taskOps";
-import type { Task, TaskDraft } from "@/lib/types";
+import type { DeadlineWarning, Task, TaskDraft } from "@/lib/types";
 
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : "Something went wrong. Try again.";
@@ -37,7 +37,49 @@ export default function DashboardPage() {
   const tasksApi = useTasks(dateKey);
   const { tasks, carried, loading, refresh } = tasksApi;
   const { tags, tagsById, createTag } = useTags();
-  const { checkin, busy, answer } = useCheckins(Boolean(profile?.notifications_enabled));
+
+  const handleDeadline = useCallback(
+    async (warning: DeadlineWarning) => {
+      toast(`${warning.headline}. ${warning.body}`, {
+        duration: 20_000,
+        actionLabel: "Mark done",
+        onAction: async () => {
+          try {
+            const res = await fetch("/api/task-action", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ taskId: warning.taskId, action: "done" }),
+            });
+            const data = (await res.json().catch(() => ({}))) as { message?: string };
+            if (!res.ok) throw new Error(data.message ?? "Could not update this task.");
+            await refresh();
+            toast(data.message ?? "Marked as done.", { duration: 4000 });
+          } catch (error) {
+            toast(error instanceof Error ? error.message : "Could not update this task.", { tone: "error" });
+          }
+        },
+        secondaryLabel: "Need 15 more",
+        onSecondary: async () => {
+          try {
+            const res = await fetch("/api/task-action", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ taskId: warning.taskId, action: "extend" }),
+            });
+            const data = (await res.json().catch(() => ({}))) as { message?: string };
+            if (!res.ok) throw new Error(data.message ?? "Could not extend this task.");
+            await refresh();
+            toast(data.message ?? "Added 15 minutes.", { duration: 4000 });
+          } catch (error) {
+            toast(error instanceof Error ? error.message : "Could not extend this task.", { tone: "error" });
+          }
+        },
+      });
+    },
+    [refresh, toast]
+  );
+
+  const { checkin, busy, answer } = useCheckins(Boolean(profile?.notifications_enabled), handleDeadline);
 
   const quickAdd = useRef<QuickAddHandle>(null);
   const [editing, setEditing] = useState<Task | null>(null);

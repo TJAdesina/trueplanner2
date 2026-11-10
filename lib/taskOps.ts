@@ -70,6 +70,7 @@ export type TaskPatch = Partial<
     | "move_count"
     | "original_scope"
     | "last_checkin_at"
+    | "deadline_warned_at"
     | "snoozed_until"
     | "completed_at"
     | "recurrence"
@@ -143,6 +144,7 @@ export async function shrinkTask(
       end_time: next.end,
       task_date: next.taskDate,
       last_checkin_at: null,
+      deadline_warned_at: null,
       snoozed_until: null,
       reminded_at: null,
       status: "not_started",
@@ -168,6 +170,7 @@ export async function moveTask(
       task_date: next.taskDate,
       move_count: task.move_count + 1,
       last_checkin_at: null,
+      deadline_warned_at: null,
       snoozed_until: null,
       reminded_at: null,
       status: "not_started",
@@ -204,6 +207,7 @@ const REVERTABLE = [
   "move_count",
   "original_scope",
   "last_checkin_at",
+  "deadline_warned_at",
   "snoozed_until",
   "completed_at",
   "reminded_at",

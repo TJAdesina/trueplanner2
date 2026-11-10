@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Checkin, Task } from "@/lib/types";
+import type { Checkin, DeadlineWarning, Task } from "@/lib/types";
 
 const POLL_MS = 30_000;
 
@@ -20,11 +20,24 @@ export type CheckinAnswer = "recommended" | "shrink" | "move" | "remove" | "done
  * when something has slipped; this just asks every 30 seconds (and whenever the
  * tab comes back into view) and shows whatever it's told.
  */
-export function useCheckins(enabled: boolean) {
+export function useCheckins(enabled: boolean, onDeadline?: (warning: DeadlineWarning) => void) {
   const [checkin, setCheckin] = useState<Checkin | null>(null);
   const [busy, setBusy] = useState(false);
   const inflight = useRef(false);
   const acting = useRef(false);
+  const callbackRef = useRef(onDeadline);
+  const seenWarnings = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    callbackRef.current = onDeadline;
+  }, [onDeadline]);
+
+  const handleDeadline = useCallback((warning: DeadlineWarning) => {
+    if (!warning?.taskId) return;
+    if (seenWarnings.current.has(warning.taskId)) return;
+    seenWarnings.current.add(warning.taskId);
+    callbackRef.current?.(warning);
+  }, []);
 
   const evaluate = useCallback(async () => {
     if (!enabled || inflight.current || acting.current) return;
@@ -32,19 +45,21 @@ export function useCheckins(enabled: boolean) {
     try {
       const res = await fetch("/api/checkin", { method: "POST" });
       if (res.ok && !acting.current) {
-        const data = await res.json();
+        const data = (await res.json()) as { checkin?: Checkin | null; deadlines?: DeadlineWarning[] };
         setCheckin((data.checkin as Checkin | null) ?? null);
+        (data.deadlines ?? []).forEach((warning) => handleDeadline(warning));
       }
     } catch {
       // Offline or a brief server hiccup: try again on the next tick.
     } finally {
       inflight.current = false;
     }
-  }, [enabled]);
+  }, [enabled, handleDeadline]);
 
   useEffect(() => {
     if (!enabled) {
       setCheckin(null);
+      seenWarnings.current.clear();
       return;
     }
     evaluate();
@@ -56,6 +71,7 @@ export function useCheckins(enabled: boolean) {
     // The service worker tells us when a push arrived while the app was open.
     const onMessage = (event: MessageEvent) => {
       if (event.data?.type === "checkin-refresh") evaluate();
+      if (event.data?.type === "deadline-warning") handleDeadline(event.data.warning as DeadlineWarning);
     };
     navigator.serviceWorker?.addEventListener("message", onMessage);
 
@@ -65,7 +81,7 @@ export function useCheckins(enabled: boolean) {
       window.removeEventListener("focus", evaluate);
       navigator.serviceWorker?.removeEventListener("message", onMessage);
     };
-  }, [enabled, evaluate]);
+  }, [enabled, evaluate, handleDeadline]);
 
   const answer = useCallback(
     async (action: CheckinAnswer): Promise<ActResult> => {

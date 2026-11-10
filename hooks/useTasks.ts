@@ -132,6 +132,7 @@ export function useTasks(dateKey: string) {
       if (timesChanged) {
         const past = nextEnd && new Date(nextEnd).getTime() <= Date.now();
         full.last_checkin_at = past ? new Date().toISOString() : null;
+        full.deadline_warned_at = null;
         full.snoozed_until = null;
         full.reminded_at = null;
       }

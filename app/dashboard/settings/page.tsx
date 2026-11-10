@@ -204,6 +204,28 @@ export default function SettingsPage() {
             </select>
           </div>
 
+          <div className="flex flex-wrap items-center justify-between gap-3 py-3">
+            <label htmlFor="deadline-warning" className="block">
+              <span className="block text-sm font-medium text-charcoal">Warn me before high-priority tasks end</span>
+              <span className="mt-0.5 block text-xs text-charcoal/50">
+                A heads-up shortly before the end time, so a deadline doesn’t pass unnoticed. Only for high-priority tasks with a time.
+              </span>
+            </label>
+            <select
+              id="deadline-warning"
+              value={profile.deadline_warning_minutes}
+              onChange={(e) => save({ deadline_warning_minutes: Number(e.target.value) })}
+              className={field}
+            >
+              <option value={0}>Off</option>
+              <option value={5}>5 minutes</option>
+              <option value={10}>10 minutes</option>
+              <option value={15}>15 minutes</option>
+              <option value={30}>30 minutes</option>
+            </select>
+          </div>
+          <p className="pb-2 text-[11px] text-charcoal/45">It only works while “Suggest a next step when a task slips” is on.</p>
+
           <div className="py-3">
             <p className="text-sm font-medium text-charcoal">Quiet hours</p>
             <p className="mt-0.5 text-xs text-charcoal/50">No suggestions or reminders during this window.</p>
@@ -237,7 +259,7 @@ export default function SettingsPage() {
 
           <Toggle
             label="Personalised wording with AI"
-            description="When off, suggestions are written by the built-in writer instead of Gemini."
+            description="When off, suggestions are written by the built-in writer instead of AI."
             checked={profile.ai_processing_enabled}
             onChange={(v) => save({ ai_processing_enabled: v })}
           />
@@ -355,6 +377,16 @@ export default function SettingsPage() {
               Install app
             </Button>
           )}
+        </div>
+      </section>
+
+      <section className="card p-5 sm:p-6">
+        <p className="eyebrow">Help us improve</p>
+        <p className="mt-2 text-sm text-charcoal/70">Found a problem or have an idea? We’d like to hear it.</p>
+        <div className="mt-4">
+          <Button variant="secondary" onClick={() => window.dispatchEvent(new Event("tp:open-feedback"))}>
+            Send feedback
+          </Button>
         </div>
       </section>
 
