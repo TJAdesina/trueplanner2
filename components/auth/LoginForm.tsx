@@ -62,6 +62,7 @@ export function LoginForm() {
           id="password"
           label="Password"
           type="password"
+          showPasswordToggle
           autoComplete="current-password"
           required
           value={password}

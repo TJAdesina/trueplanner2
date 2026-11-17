@@ -106,6 +106,7 @@ export default function SignupPage() {
           id="password"
           label="Password"
           type="password"
+          showPasswordToggle
           autoComplete="new-password"
           required
           minLength={6}
